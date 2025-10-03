@@ -3,7 +3,7 @@ import { Users, Award, Calendar } from 'lucide-react'
 export function Stats() {
   const stats = [
     { icon: Users, value: '500+', label: 'Alunos Formados' },
-    { icon: Award, value: '95%', label: 'Taxa de Aprovação' },
+    { icon: Award, value: '100%', label: 'Certificação Nacional' },
     { icon: Calendar, value: '15', label: 'Anos de Experiência' },
   ]
 

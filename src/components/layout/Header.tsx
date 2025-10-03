@@ -8,7 +8,11 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-sm">
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-primary">CERTIFICAR</div>
+          <img
+            src="/static/images/logo-certificar-transparent.png"
+            alt="Certificar"
+            className="h-12 w-auto"
+          />
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">

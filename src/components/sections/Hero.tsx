@@ -17,10 +17,13 @@ export function Hero() {
             Seja um profissional certificado e inicie uma carreira promissora
           </p>
 
-          <button className="bg-accent hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center gap-2 transition-all">
+          <a
+            href="mailto:contato@certificarcursos.com.br?subject=Inscrição no Curso de Vistoriador"
+            className="bg-accent hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold inline-flex items-center gap-2 transition-all"
+          >
             Inscreva-se Agora
             <ArrowRight size={20} />
-          </button>
+          </a>
         </div>
       </div>
     </section>

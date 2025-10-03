@@ -12,18 +12,18 @@ export function Contact() {
 
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <Mail className="text-primary mt-1" />
+                <Phone className="text-primary mt-1" />
                 <div>
-                  <p className="font-semibold">Email</p>
-                  <p className="text-gray-600">contato@certificar.com.br</p>
+                  <p className="font-semibold">Telefone</p>
+                  <p className="text-gray-600">(11) 93082-8447</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <Phone className="text-primary mt-1" />
+                <Mail className="text-primary mt-1" />
                 <div>
-                  <p className="font-semibold">Telefone</p>
-                  <p className="text-gray-600">(11) 9999-9999</p>
+                  <p className="font-semibold">Email</p>
+                  <p className="text-gray-600">contato@certificarcursos.com.br</p>
                 </div>
               </div>
 
@@ -31,7 +31,7 @@ export function Contact() {
                 <MapPin className="text-primary mt-1" />
                 <div>
                   <p className="font-semibold">Endereço</p>
-                  <p className="text-gray-600">São Paulo, SP</p>
+                  <p className="text-gray-600">Santo André - SP</p>
                 </div>
               </div>
             </div>

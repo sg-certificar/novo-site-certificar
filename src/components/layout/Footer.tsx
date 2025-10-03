@@ -28,8 +28,13 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Redes Sociais</h4>
-            <div className="flex gap-4">
+            <h4 className="font-bold mb-4">Contato</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>(11) 93082-8447</li>
+              <li>contato@certificarcursos.com.br</li>
+              <li>Santo André - SP</li>
+            </ul>
+            <div className="flex gap-4 mt-4">
               <Facebook className="cursor-pointer hover:text-primary" />
               <Instagram className="cursor-pointer hover:text-primary" />
               <Linkedin className="cursor-pointer hover:text-primary" />
