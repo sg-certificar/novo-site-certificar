@@ -37,25 +37,36 @@ export function Contact() {
             </div>
           </div>
 
-          <form className="space-y-4">
+          <form
+            action="https://formspree.io/f/xjkwgowo"
+            method="POST"
+            className="space-y-4"
+          >
             <input
               type="text"
+              name="nome"
               placeholder="Nome"
+              required
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
             />
             <input
               type="email"
+              name="email"
               placeholder="Email"
+              required
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
             />
             <input
               type="tel"
+              name="telefone"
               placeholder="Telefone"
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
             />
             <textarea
+              name="mensagem"
               placeholder="Mensagem"
               rows={4}
+              required
               className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
             ></textarea>
             <button
