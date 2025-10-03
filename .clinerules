@@ -1,0 +1,14 @@
+# Stack: Vite + React + TypeScript + Tailwind
+# Deploy: Cloudflare Pages
+# Build output: dist/
+
+Padrões:
+- Componentes funcionais com hooks
+- Tailwind classes only
+- TypeScript strict
+- Nunca commitar node_modules/ ou dist/
+
+Workflow:
+- Dev: npm run dev
+- Build: npm run build
+- Deploy: push para main = auto-deploy Cloudflare
