@@ -19,6 +19,10 @@
                 <span class="menu-item-icon">📊</span>
                 Dashboard
             </a>
+            <a class="menu-item" onclick="showSection('cursos')">
+                <span class="menu-item-icon">🎓</span>
+                Gestão de Cursos
+            </a>
             <a class="menu-item" onclick="showSection('alunos')">
                 <span class="menu-item-icon">👥</span>
                 Gestão de Alunos
@@ -39,6 +43,7 @@
                 <h2 id="pageTitle">Dashboard</h2>
             </div>
             <div class="header-actions">
+                <a href="/" class="btn btn-secondary" style="margin-right: 10px;">← Voltar ao Site</a>
                 <div class="admin-user">
                     <div class="admin-avatar">A</div>
                     <span id="adminName">Admin</span>
@@ -84,6 +89,63 @@
                 </div>
             </section>
 
+            <!-- Gestão de Cursos Section -->
+            <section id="cursos" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🎓 Criar Novo Curso</h3>
+                    </div>
+
+                    <div id="cursoAlert" class="alert"></div>
+
+                    <form onsubmit="criarCurso(event)">
+                        <div class="form-group">
+                            <label>Título do Curso</label>
+                            <input type="text" id="cursoTitulo" required placeholder="Ex: Curso de Assistente Administrativo">
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <textarea id="cursoDescricao" rows="3" required placeholder="Descrição completa do curso"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Carga Horária</label>
+                                <input type="text" id="cursoCargaHoraria" required placeholder="Ex: 40h">
+                            </div>
+                            <div class="form-group">
+                                <label>Duração (meses)</label>
+                                <input type="number" id="cursoDuracao" min="1" placeholder="Ex: 3">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Criar Curso</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Cursos Cadastrados</h3>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Carga Horária</th>
+                                    <th>Duração</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cursosTable">
+                                <tr>
+                                    <td colspan="4" style="text-align: center;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- Gestão de Alunos Section -->
             <section id="alunos" class="section">
                 <div class="card">
@@ -125,13 +187,14 @@
                                 <tr>
                                     <th>Email</th>
                                     <th>Nome</th>
+                                    <th>Código</th>
                                     <th>Status</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="alunosTable">
                                 <tr>
-                                    <td colspan="4" style="text-align: center;">Carregando...</td>
+                                    <td colspan="5" style="text-align: center;">Carregando...</td>
                                 </tr>
                             </tbody>
                         </table>
