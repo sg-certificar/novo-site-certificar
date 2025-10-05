@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Certificar</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <h1>CertificarCursos</h1>
+            <span class="admin-badge">ADMIN</span>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a class="menu-item active" onclick="showSection('dashboard')">
+                <span class="menu-item-icon">📊</span>
+                Dashboard
+            </a>
+            <a class="menu-item" onclick="showSection('alunos')">
+                <span class="menu-item-icon">👥</span>
+                Gestão de Alunos
+            </a>
+            <a class="menu-item" onclick="showSection('materiais')">
+                <span class="menu-item-icon">📚</span>
+                Gestão de Materiais
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-title">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                <h2 id="pageTitle">Dashboard</h2>
+            </div>
+            <div class="header-actions">
+                <div class="admin-user">
+                    <div class="admin-avatar">A</div>
+                    <span id="adminName">Admin</span>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">Sair</button>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-card-header">
+                            <div>
+                                <h3>Total de Alunos</h3>
+                                <div class="value" id="totalAlunos">0</div>
+                            </div>
+                            <div class="stat-card-icon">👥</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card orange">
+                        <div class="stat-card-header">
+                            <div>
+                                <h3>Total de Materiais</h3>
+                                <div class="value" id="totalMateriais">0</div>
+                            </div>
+                            <div class="stat-card-icon">📚</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card green">
+                        <div class="stat-card-header">
+                            <div>
+                                <h3>Cursos Disponíveis</h3>
+                                <div class="value" id="totalCursos">0</div>
+                            </div>
+                            <div class="stat-card-icon">🎓</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestão de Alunos Section -->
+            <section id="alunos" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👥 Autorizar Novo Aluno</h3>
+                    </div>
+
+                    <div id="alunoAlert" class="alert"></div>
+
+                    <form onsubmit="autorizarAluno(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email do Aluno</label>
+                                <input type="email" id="alunoEmail" required placeholder="aluno@exemplo.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Curso</label>
+                                <select id="alunoCurso" required>
+                                    <option value="">Selecione um curso</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Autorizar Aluno</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Alunos Autorizados</h3>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="searchAluno" placeholder="Buscar por email..." onkeyup="buscarAluno()">
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Nome</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alunosTable">
+                                <tr>
+                                    <td colspan="4" style="text-align: center;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestão de Materiais Section -->
+            <section id="materiais" class="section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📚 Upload de Material</h3>
+                    </div>
+
+                    <div id="materialAlert" class="alert"></div>
+
+                    <form onsubmit="uploadMaterial(event)">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📤</div>
+                            <div class="upload-text">Arraste um arquivo ou clique para selecionar</div>
+                            <div class="upload-hint">PDF, Vídeo, Documentos (Max 100MB)</div>
+                            <input type="file" id="materialFile" style="display: none;" required>
+                        </div>
+
+                        <div class="form-row" style="margin-top: 20px;">
+                            <div class="form-group">
+                                <label>Curso</label>
+                                <select id="materialCurso" required>
+                                    <option value="">Selecione um curso</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Módulo</label>
+                                <input type="text" id="materialModulo" required placeholder="Ex: Módulo 1">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Título do Material</label>
+                            <input type="text" id="materialTitulo" required placeholder="Ex: Introdução ao Curso">
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Enviar Material</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Materiais Cadastrados</h3>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Título</th>
+                                    <th>Curso</th>
+                                    <th>Módulo</th>
+                                    <th>Tipo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materiaisTable">
+                                <tr>
+                                    <td colspan="5" style="text-align: center;">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (checkAuth()) {
+                const session = JSON.parse(localStorage.getItem('admin_session'));
+                document.getElementById('adminName').textContent = session.email.split('@')[0];
+                startSessionTimer();
+                loadDashboardData();
+                loadCursosOptions();
+                setupDragDrop();
+            }
+        });
+    </script>
+</body>
+</html>

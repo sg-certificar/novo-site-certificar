@@ -28,10 +28,12 @@ export function Header() {
               </a>
             </div>
 
-            <button className="bg-primary text-white px-4 py-2 rounded-lg opacity-50 cursor-not-allowed">
+            <a
+              href="/area-aluno.html"
+              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-[#2563eb] transition-colors"
+            >
               Área do Aluno
-              <span className="ml-2 text-xs">Em Breve</span>
-            </button>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -51,7 +53,7 @@ export function Header() {
             <a href="#equipe" className="block hover:text-primary">Equipe</a>
             <a href="#contato" className="block hover:text-primary">Contato</a>
             <div className="text-gray-400">Banco de Talentos <span className="text-xs">(Em Breve)</span></div>
-            <div className="text-gray-400">Área do Aluno <span className="text-xs">(Em Breve)</span></div>
+            <a href="/area-aluno.html" className="block text-primary font-semibold">Área do Aluno</a>
           </div>
         )}
       </nav>
