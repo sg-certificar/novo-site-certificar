@@ -376,47 +376,92 @@ async function loadAlunos() {
     const container = document.getElementById('alunosTable');
     if (!container) return;
 
-    container.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>';
+    container.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando...</td></tr>';
 
     try {
+        console.log('🔍 Buscando alunos autorizados...');
+
         const { data: emailsAutorizados, error } = await supabaseClient
             .from('emails_autorizados')
-            .select('*')
+            .select(`
+                id,
+                email,
+                codigo_gerado,
+                autorizado,
+                created_at,
+                cursos:curso_id (
+                    id,
+                    titulo
+                )
+            `)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Erro Supabase:', error);
+            throw error;
+        }
+
+        console.log('✅ Alunos carregados:', emailsAutorizados);
 
         if (!emailsAutorizados || emailsAutorizados.length === 0) {
-            container.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum aluno autorizado</td></tr>';
+            container.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum aluno autorizado</td></tr>';
             return;
         }
 
-        const html = emailsAutorizados.map(item => `
-            <tr>
-                <td>${item.email}</td>
-                <td>${item.nome_completo || '-'}</td>
-                <td>
-                    <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">
-                        ${item.codigo_gerado || '-'}
-                    </code>
-                </td>
-                <td><span class="badge ${item.autorizado ? 'badge-success' : 'badge-warning'}">
-                    ${item.autorizado ? 'Autorizado' : 'Pendente'}
-                </span></td>
-                <td>
-                    <button class="btn btn-danger" onclick="removerAluno('${item.id}')" style="padding: 6px 12px; font-size: 12px;">
-                        Remover
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        const html = emailsAutorizados.map(item => {
+            const cursoNome = item.cursos?.titulo || 'Curso não encontrado';
+            const codigo = item.codigo_gerado || 'N/A';
+
+            return `
+                <tr>
+                    <td>${item.email}</td>
+                    <td>${cursoNome}</td>
+                    <td>
+                        <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace;">
+                            ${codigo}
+                        </code>
+                    </td>
+                    <td>
+                        <span class="badge ${item.autorizado ? 'badge-success' : 'badge-warning'}">
+                            ${item.autorizado ? 'Autorizado' : 'Pendente'}
+                        </span>
+                    </td>
+                    <td>
+                        ${codigo !== 'N/A' ? `
+                            <button class="btn btn-primary" onclick="copiarCodigo('${codigo}')" style="padding: 6px 12px; font-size: 12px; margin-right: 5px;">
+                                📋 Copiar
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-danger" onclick="removerAluno('${item.id}')" style="padding: 6px 12px; font-size: 12px;">
+                            Remover
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
         container.innerHTML = html;
 
     } catch (err) {
-        console.error('Erro ao carregar alunos:', err);
-        container.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #ef4444;">Erro ao carregar alunos</td></tr>';
+        console.error('❌ Erro ao carregar alunos:', err);
+        console.error('Detalhes do erro:', err.message, err.details, err.hint);
+        container.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center; color: #ef4444;">
+                    Erro ao carregar alunos: ${err.message || 'Erro desconhecido'}
+                </td>
+            </tr>
+        `;
     }
+}
+
+function copiarCodigo(codigo) {
+    navigator.clipboard.writeText(codigo).then(() => {
+        alert(`Código ${codigo} copiado para área de transferência!`);
+    }).catch(err => {
+        console.error('Erro ao copiar:', err);
+        alert('Erro ao copiar código. Tente manualmente.');
+    });
 }
 
 async function autorizarAluno(event) {
