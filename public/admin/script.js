@@ -79,7 +79,22 @@ async function handleLogin(event) {
 
     try {
         if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            // Login bem-sucedido (validação local apenas - temporário)
+            // AUTENTICAR COM SUPABASE para habilitar Storage privado
+            console.log('🔐 Autenticando com Supabase...');
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: ADMIN_EMAIL,
+                password: ADMIN_PASSWORD
+            });
+
+            if (authError) {
+                console.error('❌ Erro ao autenticar no Supabase:', authError);
+                console.warn('⚠️ Continuando com autenticação local apenas');
+                // Continua mesmo se falhar (para não quebrar o admin)
+            } else {
+                console.log('✅ Autenticado no Supabase:', authData.user.email);
+            }
+
+            // Login bem-sucedido
             const sessionData = {
                 email: email,
                 loginTime: Date.now(),
@@ -158,7 +173,8 @@ function showSection(sectionName) {
         'dashboard': 'Dashboard',
         'cursos': 'Gestão de Cursos',
         'alunos': 'Gestão de Alunos',
-        'materiais': 'Gestão de Materiais'
+        'materiais': 'Gestão de Materiais',
+        'certificados': 'Gestão de Certificados'
     };
     const titleElement = document.getElementById('pageTitle');
     if (titleElement) {
@@ -172,6 +188,9 @@ function showSection(sectionName) {
         loadAlunos();
     } else if (sectionName === 'materiais') {
         loadMateriais();
+    } else if (sectionName === 'certificados') {
+        loadCertificados();
+        loadCursosOptionsCertificados();
     }
 
     // Fechar sidebar em mobile
@@ -188,22 +207,32 @@ function toggleSidebar() {
 
 async function loadDashboardData() {
     try {
-        const [alunos, materiais, cursos] = await Promise.all([
-            supabaseClient.from('profiles').select('*', { count: 'exact' }),
+        console.log('📊 Carregando estatísticas do dashboard...');
+
+        const [alunosAutorizados, materiais, cursos, matriculas] = await Promise.all([
+            supabaseClient.from('emails_autorizados').select('*', { count: 'exact' }).eq('autorizado', true),
             supabaseClient.from('materiais').select('*', { count: 'exact' }),
-            supabaseClient.from('cursos').select('*', { count: 'exact' })
+            supabaseClient.from('cursos').select('*', { count: 'exact' }),
+            supabaseClient.from('matriculas').select('*', { count: 'exact' })
         ]);
+
+        console.log('📈 Estatísticas:', {
+            alunos: alunosAutorizados.count,
+            materiais: materiais.count,
+            cursos: cursos.count,
+            matriculas: matriculas.count
+        });
 
         const totalAlunosEl = document.getElementById('totalAlunos');
         const totalMateriaisEl = document.getElementById('totalMateriais');
         const totalCursosEl = document.getElementById('totalCursos');
 
-        if (totalAlunosEl) totalAlunosEl.textContent = alunos.count || 0;
+        if (totalAlunosEl) totalAlunosEl.textContent = alunosAutorizados.count || 0;
         if (totalMateriaisEl) totalMateriaisEl.textContent = materiais.count || 0;
         if (totalCursosEl) totalCursosEl.textContent = cursos.count || 0;
 
     } catch (err) {
-        console.error('Erro ao carregar dados do dashboard:', err);
+        console.error('❌ Erro ao carregar dados do dashboard:', err);
     }
 }
 
@@ -657,21 +686,27 @@ async function uploadMaterial(event) {
         console.log('✅ Upload concluído!', uploadData);
 
         // Salvar metadados no banco
+        const materialData = {
+            curso_id: cursoId,
+            modulo: modulo,
+            titulo: titulo,
+            tipo: getFileType(file.name),
+            arquivo_path: filePath,
+            tamanho: formatFileSize(file.size)
+        };
+
+        console.log('💾 Salvando material no banco:', materialData);
+
         const { error: dbError } = await supabaseClient
             .from('materiais')
-            .insert({
-                curso_id: cursoId,
-                modulo: modulo,
-                titulo: titulo,
-                tipo: getFileType(file.name),
-                arquivo_path: filePath,
-                tamanho: formatFileSize(file.size)
-            });
+            .insert(materialData);
 
         if (dbError) {
             console.error('❌ Erro ao salvar no banco:', dbError);
             throw new Error(`Erro ao salvar: ${dbError.message}`);
         }
+
+        console.log('✅ Material salvo com sucesso!');
 
         showAlertMessage(alert, 'Material enviado com sucesso!', 'success');
 
@@ -788,6 +823,273 @@ async function loadCursosOptions() {
 function setupDragDrop() {
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('materialFile');
+
+    if (!uploadArea || !fileInput) return;
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            uploadArea.querySelector('.upload-text').textContent = files[0].name;
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            uploadArea.querySelector('.upload-text').textContent = e.target.files[0].name;
+        }
+    });
+}
+
+// ========== GESTÃO DE CERTIFICADOS ==========
+
+async function loadCursosOptionsCertificados() {
+    try {
+        const { data: cursos } = await supabaseClient
+            .from('cursos')
+            .select('id, titulo')
+            .order('titulo');
+
+        if (cursos) {
+            const select = document.getElementById('certificadoCurso');
+            if (select) {
+                select.innerHTML = '<option value="">Selecione um curso</option>' +
+                    cursos.map(c => `<option value="${c.id}">${c.titulo}</option>`).join('');
+            }
+        }
+    } catch (err) {
+        console.error('Erro ao carregar cursos:', err);
+    }
+}
+
+async function loadAlunosPorCurso() {
+    const cursoId = document.getElementById('certificadoCurso').value;
+    const alunoSelect = document.getElementById('certificadoAluno');
+
+    if (!cursoId) {
+        alunoSelect.innerHTML = '<option value="">Selecione um curso primeiro</option>';
+        return;
+    }
+
+    alunoSelect.innerHTML = '<option value="">Carregando...</option>';
+
+    try {
+        // Buscar alunos matriculados no curso
+        const { data: matriculas, error } = await supabaseClient
+            .from('matriculas')
+            .select(`
+                aluno_id,
+                profiles!matriculas_aluno_id_fkey (
+                    id,
+                    full_name,
+                    email
+                )
+            `)
+            .eq('curso_id', cursoId);
+
+        if (error) throw error;
+
+        if (!matriculas || matriculas.length === 0) {
+            alunoSelect.innerHTML = '<option value="">Nenhum aluno matriculado</option>';
+            return;
+        }
+
+        const options = matriculas.map(m => {
+            const nome = m.profiles?.full_name || m.profiles?.email || 'Sem nome';
+            return `<option value="${m.aluno_id}">${nome}</option>`;
+        }).join('');
+
+        alunoSelect.innerHTML = `<option value="">Selecione um aluno</option>${options}`;
+
+    } catch (err) {
+        console.error('Erro ao carregar alunos:', err);
+        alunoSelect.innerHTML = '<option value="">Erro ao carregar alunos</option>';
+    }
+}
+
+async function emitirCertificado(event) {
+    event.preventDefault();
+
+    const cursoId = document.getElementById('certificadoCurso').value;
+    const alunoId = document.getElementById('certificadoAluno').value;
+    const fileInput = document.getElementById('certificadoFile');
+    const file = fileInput.files[0];
+    const alert = document.getElementById('certificadoAlert');
+    const btn = event.target.querySelector('button[type="submit"]');
+
+    if (!cursoId || !alunoId || !file) {
+        showAlertMessage(alert, 'Preencha todos os campos e selecione o arquivo.', 'error');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Emitindo certificado...';
+
+    try {
+        // Upload para Storage
+        const fileName = `${Date.now()}_${file.name}`;
+        const filePath = `certificados/${alunoId}/${fileName}`;
+
+        console.log('📤 Fazendo upload do certificado para:', filePath);
+
+        const { error: uploadError } = await supabaseClient
+            .storage
+            .from('course-materials')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            console.error('❌ Erro no upload:', uploadError);
+            throw new Error(`Upload falhou: ${uploadError.message}`);
+        }
+
+        console.log('✅ Upload concluído!');
+
+        // Buscar matrícula do aluno neste curso
+        const { data: matricula } = await supabaseClient
+            .from('matriculas')
+            .select('id')
+            .eq('aluno_id', alunoId)
+            .eq('curso_id', cursoId)
+            .single();
+
+        // Salvar certificado no banco
+        const { error: dbError } = await supabaseClient
+            .from('certificados')
+            .insert({
+                aluno_id: alunoId,
+                curso_id: cursoId,
+                matricula_id: matricula?.id,
+                arquivo_path: filePath,
+                data_emissao: new Date().toISOString()
+            });
+
+        if (dbError) {
+            console.error('❌ Erro ao salvar no banco:', dbError);
+            throw new Error(`Erro ao salvar: ${dbError.message}`);
+        }
+
+        showAlertMessage(alert, 'Certificado emitido com sucesso!', 'success');
+
+        // Limpar formulário
+        event.target.reset();
+        document.getElementById('certificadoAluno').innerHTML = '<option value="">Selecione um curso primeiro</option>';
+
+        // Recarregar lista
+        await loadCertificados();
+
+    } catch (err) {
+        console.error('❌ Erro ao emitir certificado:', err);
+        showAlertMessage(alert, `Erro: ${err.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Emitir Certificado';
+    }
+}
+
+async function loadCertificados() {
+    const container = document.getElementById('certificadosTable');
+    if (!container) return;
+
+    container.innerHTML = '<tr><td colspan="4" style="text-align:center;">Carregando...</td></tr>';
+
+    try {
+        const { data: certificados, error } = await supabaseClient
+            .from('certificados')
+            .select(`
+                *,
+                profiles!certificados_aluno_id_fkey (full_name, email),
+                cursos (titulo)
+            `)
+            .order('data_emissao', { ascending: false });
+
+        if (error) throw error;
+
+        if (!certificados || certificados.length === 0) {
+            container.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum certificado emitido</td></tr>';
+            return;
+        }
+
+        const html = certificados.map(cert => {
+            const alunoNome = cert.profiles?.full_name || cert.profiles?.email || 'Sem nome';
+            const cursoNome = cert.cursos?.titulo || 'Curso não encontrado';
+            const dataEmissao = new Date(cert.data_emissao).toLocaleDateString('pt-BR');
+
+            return `
+                <tr>
+                    <td>${alunoNome}</td>
+                    <td>${cursoNome}</td>
+                    <td>${dataEmissao}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deletarCertificado('${cert.id}')" style="padding: 6px 12px; font-size: 12px;">
+                            Deletar
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        container.innerHTML = html;
+
+    } catch (err) {
+        console.error('Erro ao carregar certificados:', err);
+        container.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #ef4444;">Erro ao carregar certificados</td></tr>';
+    }
+}
+
+async function deletarCertificado(id) {
+    if (!confirm('Deseja realmente deletar este certificado?')) return;
+
+    try {
+        // Buscar certificado para obter arquivo_path
+        const { data: certificado } = await supabaseClient
+            .from('certificados')
+            .select('arquivo_path')
+            .eq('id', id)
+            .single();
+
+        if (certificado && certificado.arquivo_path) {
+            // Deletar do Storage
+            await supabaseClient
+                .storage
+                .from('course-materials')
+                .remove([certificado.arquivo_path]);
+        }
+
+        // Deletar do banco
+        const { error } = await supabaseClient
+            .from('certificados')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        alert('Certificado deletado com sucesso!');
+        await loadCertificados();
+
+    } catch (err) {
+        console.error('Erro ao deletar certificado:', err);
+        alert('Erro ao deletar certificado.');
+    }
+}
+
+// Setup drag & drop para certificados
+function setupDragDropCertificado() {
+    const uploadArea = document.getElementById('uploadAreaCertificado');
+    const fileInput = document.getElementById('certificadoFile');
 
     if (!uploadArea || !fileInput) return;
 

@@ -758,42 +758,25 @@
                 <div class="stats-grid">
                     <div class="stat-card blue">
                         <h3>Cursos Matriculados</h3>
-                        <div class="value">5</div>
+                        <div class="value" id="statTotalCursos">0</div>
                         <p>Ativos no momento</p>
                     </div>
                     <div class="stat-card green">
                         <h3>Cursos Concluídos</h3>
-                        <div class="value">12</div>
+                        <div class="value" id="statCursosCompletos">0</div>
                         <p>Certificados emitidos</p>
                     </div>
                     <div class="stat-card orange">
                         <h3>Horas de Estudo</h3>
-                        <div class="value">87h</div>
+                        <div class="value" id="statHorasEstudo">0h</div>
                         <p>Total acumulado</p>
                     </div>
                 </div>
 
                 <div class="card">
                     <h2>Cursos em Andamento</h2>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Inspeção Veicular Avançada</div>
-                            <span class="badge badge-progress">Em progresso</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
-                        </div>
-                        <div class="progress-text">65% concluído</div>
-                    </div>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Legislação de Trânsito</div>
-                            <span class="badge badge-progress">Em progresso</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 30%"></div>
-                        </div>
-                        <div class="progress-text">30% concluído</div>
+                    <div id="cursosAndamentoContainer">
+                        <p style="color: #64748b; text-align: center; padding: 40px;">Carregando cursos...</p>
                     </div>
                 </div>
             </div>
@@ -802,55 +785,8 @@
             <div id="coursesTab" class="tab-content">
                 <div class="card">
                     <h2>Todos os Meus Cursos</h2>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Inspeção Veicular Avançada</div>
-                            <span class="badge badge-progress">Em progresso</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
-                        </div>
-                        <div class="progress-text">65% concluído · 20h restantes</div>
-                    </div>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Legislação de Trânsito</div>
-                            <span class="badge badge-progress">Em progresso</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 30%"></div>
-                        </div>
-                        <div class="progress-text">30% concluído · 14h restantes</div>
-                    </div>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Vistoria Básica</div>
-                            <span class="badge badge-completed">Concluído</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 100%"></div>
-                        </div>
-                        <div class="progress-text">100% concluído</div>
-                    </div>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Segurança no Trabalho</div>
-                            <span class="badge badge-completed">Concluído</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 100%"></div>
-                        </div>
-                        <div class="progress-text">100% concluído</div>
-                    </div>
-                    <div class="course-item">
-                        <div class="course-header">
-                            <div class="course-title">Mecânica Automotiva</div>
-                            <span class="badge badge-orange">Novo</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="progress-text">0% concluído · 25h totais</div>
+                    <div id="todosCursosContainer">
+                        <p style="color: #64748b; text-align: center; padding: 40px;">Carregando cursos...</p>
                     </div>
                 </div>
             </div>
@@ -869,26 +805,8 @@
             <div id="certificatesTab" class="tab-content">
                 <div class="card">
                     <h2>Meus Certificados</h2>
-                    <div class="certificate-item">
-                        <div class="certificate-info">
-                            <h3>Vistoria Básica</h3>
-                            <div class="certificate-date">Emitido em 15/08/2024</div>
-                        </div>
-                        <button class="btn btn-download">Baixar PDF</button>
-                    </div>
-                    <div class="certificate-item">
-                        <div class="certificate-info">
-                            <h3>Segurança no Trabalho</h3>
-                            <div class="certificate-date">Emitido em 22/07/2024</div>
-                        </div>
-                        <button class="btn btn-download">Baixar PDF</button>
-                    </div>
-                    <div class="certificate-item">
-                        <div class="certificate-info">
-                            <h3>Primeiros Socorros</h3>
-                            <div class="certificate-date">Emitido em 10/06/2024</div>
-                        </div>
-                        <button class="btn btn-download">Baixar PDF</button>
+                    <div id="certificadosContainer">
+                        <p style="color: #64748b; text-align: center; padding: 40px;">Carregando certificados...</p>
                     </div>
                 </div>
             </div>
@@ -1306,10 +1224,17 @@
 
         // Carregar dados do dashboard
         async function loadDashboardData() {
-            if (!currentUser) return;
+            if (!currentUser) {
+                console.error('❌ Usuário não autenticado');
+                return;
+            }
+
+            console.log('👤 Carregando dados para usuário:', currentUser.id);
 
             try {
                 // Buscar matrículas do aluno
+                console.log('🔍 Buscando matrículas do aluno...');
+
                 const { data: matriculas, error: matriculasError } = await supabaseClient
                     .from('matriculas')
                     .select(`
@@ -1322,6 +1247,8 @@
                         )
                     `)
                     .eq('aluno_id', currentUser.id);
+
+                console.log('📋 Matrículas encontradas:', matriculas);
 
                 if (matriculasError) {
                     console.error('Erro ao carregar matrículas:', matriculasError);
@@ -1366,12 +1293,16 @@
                 const cursosIds = matriculas.map(m => m.curso_id);
 
                 // Buscar materiais dos cursos
+                console.log('🔍 Buscando materiais para cursos:', cursosIds);
+
                 const { data: materiais, error: materiaisError } = await supabaseClient
                     .from('materiais')
                     .select('*')
                     .in('curso_id', cursosIds)
                     .order('modulo', { ascending: true })
-                    .order('ordem', { ascending: true });
+                    .order('created_at', { ascending: true });
+
+                console.log('📚 Materiais encontrados:', materiais);
 
                 if (materiaisError) {
                     console.error('Erro ao carregar materiais:', materiaisError);
@@ -1441,7 +1372,7 @@
                                     <div class="material-meta">${material.tipo || 'Documento'} ${material.tamanho ? '· ' + material.tamanho : ''}</div>
                                 </div>
                             </div>
-                            <button class="btn-material-download" onclick="downloadMaterial('${material.id}', '${material.storage_path}', '${material.titulo}')">
+                            <button class="btn-material-download" onclick="downloadMaterial('${material.id}', '${material.arquivo_path}', '${material.titulo}')">
                                 <span>⬇</span> Download
                             </button>
                         </div>
@@ -1464,7 +1395,14 @@
 
         // Download de material
         async function downloadMaterial(materialId, storagePath, titulo) {
+            console.log('⬇️ Tentando download:', {
+                materialId: materialId,
+                arquivo_path: storagePath,
+                titulo: titulo
+            });
+
             if (!storagePath) {
+                console.error('❌ Caminho do arquivo não encontrado');
                 alert('Caminho do arquivo não encontrado.');
                 return;
             }
@@ -1521,40 +1459,46 @@
 
         // Atualizar estatísticas
         function updateStatistics(totalCursos, cursosCompletos, totalHoras) {
-            const stats = document.querySelectorAll('.stat-card .value');
-            if (stats[0]) stats[0].textContent = totalCursos;
-            if (stats[1]) stats[1].textContent = cursosCompletos;
-            if (stats[2]) stats[2].textContent = totalHoras + 'h';
+            console.log('📊 Atualizando estatísticas:', { totalCursos, cursosCompletos, totalHoras });
+
+            document.getElementById('statTotalCursos').textContent = totalCursos;
+            document.getElementById('statCursosCompletos').textContent = cursosCompletos;
+            document.getElementById('statHorasEstudo').textContent = totalHoras + 'h';
         }
 
         // Renderizar cursos
         function renderCourses(matriculas) {
+            console.log('🎓 Renderizando cursos:', matriculas);
+
+            if (!matriculas || matriculas.length === 0) {
+                document.getElementById('cursosAndamentoContainer').innerHTML =
+                    '<p style="color: #64748b; text-align: center; padding: 40px;">Você ainda não está matriculado em nenhum curso.</p>';
+                document.getElementById('todosCursosContainer').innerHTML =
+                    '<p style="color: #64748b; text-align: center; padding: 40px;">Você ainda não está matriculado em nenhum curso.</p>';
+                return;
+            }
+
             // Cursos em andamento (Overview)
             const cursosEmAndamento = matriculas.filter(m => m.progresso > 0 && m.progresso < 100);
-            const overviewContainer = document.querySelector('#overviewTab .card');
+            const andamentoContainer = document.getElementById('cursosAndamentoContainer');
 
             if (cursosEmAndamento.length > 0) {
-                const cursosHTML = cursosEmAndamento.map(m => createCourseHTML(m)).join('');
-                const existingTitle = overviewContainer.querySelector('h2');
-                overviewContainer.innerHTML = '';
-                if (existingTitle) overviewContainer.appendChild(existingTitle);
-                overviewContainer.innerHTML += cursosHTML;
+                andamentoContainer.innerHTML = cursosEmAndamento.map(m => createCourseHTML(m)).join('');
+            } else {
+                andamentoContainer.innerHTML = '<p style="color: #64748b; text-align: center; padding: 40px;">Nenhum curso em andamento.</p>';
             }
 
             // Todos os cursos (Cursos Tab)
-            const allCoursesContainer = document.querySelector('#coursesTab .card');
-            if (matriculas.length > 0) {
-                const cursosHTML = matriculas.map(m => createCourseHTML(m)).join('');
-                const existingTitle = allCoursesContainer.querySelector('h2');
-                allCoursesContainer.innerHTML = '';
-                if (existingTitle) allCoursesContainer.appendChild(existingTitle);
-                allCoursesContainer.innerHTML += cursosHTML;
-            }
+            const todosContainer = document.getElementById('todosCursosContainer');
+            todosContainer.innerHTML = matriculas.map(m => createCourseHTML(m)).join('');
 
             // Certificados
             const certificadosCompletos = matriculas.filter(m => m.progresso === 100);
             if (certificadosCompletos.length > 0) {
                 renderCertificates(certificadosCompletos);
+            } else {
+                document.getElementById('certificadosContainer').innerHTML =
+                    '<p style="color: #64748b; text-align: center; padding: 40px;">Nenhum certificado disponível ainda.</p>';
             }
         }
 
@@ -1583,34 +1527,100 @@
             `;
         }
 
-        // Renderizar certificados
-        function renderCertificates(certificados) {
-            const container = document.querySelector('#certificatesTab .card');
-            const certificadosHTML = certificados.map(m => {
-                const dataEmissao = m.data_conclusao
-                    ? new Date(m.data_conclusao).toLocaleDateString('pt-BR')
-                    : new Date().toLocaleDateString('pt-BR');
+        // Carregar e renderizar certificados reais
+        async function loadAndRenderCertificates() {
+            if (!currentUser) return;
 
-                return `
-                    <div class="certificate-item">
-                        <div class="certificate-info">
-                            <h3>${m.cursos.titulo}</h3>
-                            <div class="certificate-date">Emitido em ${dataEmissao}</div>
+            console.log('🎓 Buscando certificados do aluno...');
+
+            try {
+                const { data: certificados, error } = await supabaseClient
+                    .from('certificados')
+                    .select(`
+                        *,
+                        cursos (titulo)
+                    `)
+                    .eq('aluno_id', currentUser.id)
+                    .order('data_emissao', { ascending: false });
+
+                if (error) {
+                    console.error('Erro ao carregar certificados:', error);
+                    return;
+                }
+
+                console.log('📜 Certificados encontrados:', certificados);
+
+                const container = document.getElementById('certificadosContainer');
+
+                if (!certificados || certificados.length === 0) {
+                    container.innerHTML = '<p style="color: #64748b; text-align: center; padding: 40px;">Nenhum certificado disponível ainda.</p>';
+                    return;
+                }
+
+                const certificadosHTML = certificados.map(cert => {
+                    const dataEmissao = new Date(cert.data_emissao).toLocaleDateString('pt-BR');
+
+                    return `
+                        <div class="certificate-item">
+                            <div class="certificate-info">
+                                <h3>${cert.cursos?.titulo || 'Curso'}</h3>
+                                <div class="certificate-date">Emitido em ${dataEmissao}</div>
+                            </div>
+                            <button class="btn btn-download" onclick="downloadCertificate('${cert.id}', '${cert.arquivo_path}')">Baixar PDF</button>
                         </div>
-                        <button class="btn btn-download" onclick="downloadCertificate('${m.id}')">Baixar PDF</button>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
 
-            const existingTitle = container.querySelector('h2');
-            container.innerHTML = '';
-            if (existingTitle) container.appendChild(existingTitle);
-            container.innerHTML += certificadosHTML;
+                container.innerHTML = certificadosHTML;
+
+            } catch (err) {
+                console.error('Erro ao carregar certificados:', err);
+            }
         }
 
-        // Download de certificado (placeholder)
-        function downloadCertificate(matriculaId) {
-            showAlert('profileAlert', 'Funcionalidade de download de certificado em desenvolvimento', false, true);
+        // Renderizar certificados (manter para compatibilidade - mas agora busca dados reais)
+        async function renderCertificates(matriculas) {
+            await loadAndRenderCertificates();
+        }
+
+        // Download de certificado
+        async function downloadCertificate(certificadoId, arquivoPath) {
+            console.log('📜 Baixando certificado:', { certificadoId, arquivoPath });
+
+            if (!arquivoPath) {
+                alert('Caminho do certificado não encontrado.');
+                return;
+            }
+
+            showLoading('Preparando download...');
+
+            try {
+                // Criar URL assinada para download seguro
+                const { data, error } = await supabaseClient
+                    .storage
+                    .from('course-materials')
+                    .createSignedUrl(arquivoPath, 60); // 60 segundos
+
+                hideLoading();
+
+                if (error) {
+                    console.error('Erro ao gerar URL de download:', error);
+                    alert('Erro ao preparar download. Tente novamente.');
+                    return;
+                }
+
+                if (data && data.signedUrl) {
+                    // Abrir em nova aba
+                    window.open(data.signedUrl, '_blank');
+                } else {
+                    alert('Erro ao gerar link de download.');
+                }
+
+            } catch (err) {
+                hideLoading();
+                console.error('Erro no download:', err);
+                alert('Erro ao fazer download. Tente novamente.');
+            }
         }
 
         // Atualizar perfil
