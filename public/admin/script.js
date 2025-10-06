@@ -79,7 +79,7 @@ async function handleLogin(event) {
 
     try {
         if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-            // Login bem-sucedido
+            // Login bem-sucedido (validação local apenas - temporário)
             const sessionData = {
                 email: email,
                 loginTime: Date.now(),
@@ -635,16 +635,26 @@ async function uploadMaterial(event) {
     btn.textContent = 'Fazendo upload...';
 
     try {
-        // Upload para Storage
+        // Upload SIMPLES para Storage (bucket público)
         const fileName = `${Date.now()}_${file.name}`;
         const filePath = `${cursoId}/${modulo}/${fileName}`;
 
-        const { error: uploadError } = await supabaseClient
+        console.log('📤 Fazendo upload para:', filePath);
+
+        const { data: uploadData, error: uploadError } = await supabaseClient
             .storage
             .from('course-materials')
-            .upload(filePath, file);
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+            console.error('❌ Erro no upload:', uploadError);
+            throw new Error(`Upload falhou: ${uploadError.message}`);
+        }
+
+        console.log('✅ Upload concluído!', uploadData);
 
         // Salvar metadados no banco
         const { error: dbError } = await supabaseClient
@@ -654,23 +664,28 @@ async function uploadMaterial(event) {
                 modulo: modulo,
                 titulo: titulo,
                 tipo: getFileType(file.name),
-                storage_path: filePath,
+                arquivo_path: filePath,
                 tamanho: formatFileSize(file.size)
             });
 
-        if (dbError) throw dbError;
+        if (dbError) {
+            console.error('❌ Erro ao salvar no banco:', dbError);
+            throw new Error(`Erro ao salvar: ${dbError.message}`);
+        }
 
         showAlertMessage(alert, 'Material enviado com sucesso!', 'success');
 
         // Limpar formulário
         event.target.reset();
+        const uploadText = document.getElementById('uploadArea')?.querySelector('.upload-text');
+        if (uploadText) uploadText.textContent = 'Clique ou arraste arquivos aqui';
 
         // Recarregar lista
         await loadMateriais();
 
     } catch (err) {
-        console.error('Erro ao fazer upload:', err);
-        showAlertMessage(alert, 'Erro ao enviar material.', 'error');
+        console.error('❌ Erro ao fazer upload:', err);
+        showAlertMessage(alert, `Erro: ${err.message}`, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Enviar Material';
