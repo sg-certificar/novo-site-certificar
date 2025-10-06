@@ -935,6 +935,78 @@
             }, 5000);
         }
 
+        // Verificar se aluno está autorizado e criar matrícula automática
+        async function verificarECriarMatricula(user) {
+            if (!user || !user.email) {
+                console.warn('⚠️ Usuário sem email');
+                return;
+            }
+
+            try {
+                console.log('🔍 Verificando autorização para:', user.email);
+
+                // 1. Buscar em emails_autorizados
+                const { data: emailAutorizado, error: emailError } = await supabaseClient
+                    .from('emails_autorizados')
+                    .select('*')
+                    .eq('email', user.email.toLowerCase())
+                    .eq('autorizado', true)
+                    .maybeSingle();
+
+                if (emailError) {
+                    console.error('❌ Erro ao buscar email autorizado:', emailError);
+                    return;
+                }
+
+                if (!emailAutorizado) {
+                    console.warn('⚠️ Email não encontrado em emails_autorizados:', user.email);
+                    return;
+                }
+
+                console.log('✅ Email autorizado encontrado:', emailAutorizado);
+
+                // 2. Verificar se já tem matrícula
+                const { data: matriculaExistente, error: matriculaCheckError } = await supabaseClient
+                    .from('matriculas')
+                    .select('*')
+                    .eq('aluno_id', user.id)
+                    .eq('curso_id', emailAutorizado.curso_id)
+                    .maybeSingle();
+
+                if (matriculaCheckError) {
+                    console.error('❌ Erro ao verificar matrícula:', matriculaCheckError);
+                }
+
+                if (matriculaExistente) {
+                    console.log('ℹ️ Matrícula já existe:', matriculaExistente);
+                    return;
+                }
+
+                // 3. Criar matrícula automática
+                console.log('📝 Criando matrícula automática...');
+
+                const { data: novaMatricula, error: matriculaError } = await supabaseClient
+                    .from('matriculas')
+                    .insert({
+                        aluno_id: user.id,
+                        aluno_email: user.email,
+                        curso_id: emailAutorizado.curso_id,
+                        progresso: 0,
+                        data_matricula: new Date().toISOString()
+                    })
+                    .select();
+
+                if (matriculaError) {
+                    console.error('❌ Erro ao criar matrícula:', matriculaError);
+                } else {
+                    console.log('✅ Matrícula criada com sucesso:', novaMatricula);
+                }
+
+            } catch (err) {
+                console.error('❌ Erro em verificarECriarMatricula:', err);
+            }
+        }
+
         // Login
         async function handleLogin(event) {
             event.preventDefault();
@@ -960,6 +1032,10 @@
                     showAlert('loginAlert', error.message, false);
                 } else {
                     currentUser = data.user;
+
+                    // Verificar se aluno está autorizado e criar matrícula se necessário
+                    await verificarECriarMatricula(currentUser);
+
                     hideLoading();
                     showDashboard();
                     loadUserData();
@@ -1113,19 +1189,25 @@
 
                 // 6. Criar matrículas automáticas
                 if (cursosUnicos.length > 0) {
+                    console.log('📝 Criando matrículas para cursos:', cursosUnicos);
+
                     const matriculas = cursosUnicos.map(cursoId => ({
                         aluno_id: userId,
+                        aluno_email: email, // IMPORTANTE: Adicionar email para queries
                         curso_id: cursoId,
                         progresso: 0,
                         data_matricula: new Date().toISOString()
                     }));
 
-                    const { error: matriculaError } = await supabaseClient
+                    const { data: matriculasData, error: matriculaError } = await supabaseClient
                         .from('matriculas')
-                        .insert(matriculas);
+                        .insert(matriculas)
+                        .select();
 
                     if (matriculaError) {
-                        console.error('Erro ao criar matrículas:', matriculaError);
+                        console.error('❌ Erro ao criar matrículas:', matriculaError);
+                    } else {
+                        console.log('✅ Matrículas criadas com sucesso:', matriculasData);
                     }
                 }
 
@@ -1229,7 +1311,10 @@
                 return;
             }
 
-            console.log('👤 Carregando dados para usuário:', currentUser.id);
+            console.log('👤 Carregando dados para usuário:', {
+                id: currentUser.id,
+                email: currentUser.email
+            });
 
             try {
                 // Buscar matrículas do aluno
@@ -1249,9 +1334,29 @@
                     .eq('aluno_id', currentUser.id);
 
                 console.log('📋 Matrículas encontradas:', matriculas);
+                console.log('📊 Total de matrículas:', matriculas?.length || 0);
 
                 if (matriculasError) {
-                    console.error('Erro ao carregar matrículas:', matriculasError);
+                    console.error('❌ Erro ao carregar matrículas:', matriculasError);
+                    return;
+                }
+
+                if (!matriculas || matriculas.length === 0) {
+                    console.warn('⚠️ Nenhuma matrícula encontrada para este usuário');
+                    console.log('💡 Verifique se:');
+                    console.log('   1. O aluno foi autorizado em emails_autorizados');
+                    console.log('   2. Foi criada uma matrícula na tabela matriculas');
+                    console.log('   3. O aluno_id da matrícula corresponde ao user.id');
+
+                    // Mostrar mensagem na UI
+                    document.getElementById('cursosAndamentoContainer').innerHTML =
+                        '<p style="color: #f59e0b; text-align: center; padding: 40px;">⚠️ Você ainda não está matriculado em nenhum curso.<br>Entre em contato com o administrador.</p>';
+                    document.getElementById('todosCursosContainer').innerHTML =
+                        '<p style="color: #f59e0b; text-align: center; padding: 40px;">⚠️ Você ainda não está matriculado em nenhum curso.<br>Entre em contato com o administrador.</p>';
+                    document.getElementById('materialsContainer').innerHTML =
+                        '<p style="color: #f59e0b; text-align: center; padding: 40px;">⚠️ Você ainda não está matriculado em nenhum curso.<br>Entre em contato com o administrador.</p>';
+
+                    updateStatistics(0, 0, 0);
                     return;
                 }
 

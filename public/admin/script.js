@@ -888,35 +888,79 @@ async function loadAlunosPorCurso() {
     alunoSelect.innerHTML = '<option value="">Carregando...</option>';
 
     try {
-        // Buscar alunos matriculados no curso
-        const { data: matriculas, error } = await supabaseClient
+        console.log('🔍 Buscando alunos matriculados no curso:', cursoId);
+
+        // Buscar matrículas do curso
+        const { data: matriculas, error: matriculasError } = await supabaseClient
             .from('matriculas')
-            .select(`
-                aluno_id,
-                profiles!matriculas_aluno_id_fkey (
-                    id,
-                    full_name,
-                    email
-                )
-            `)
+            .select('aluno_id, aluno_email')
             .eq('curso_id', cursoId);
 
-        if (error) throw error;
+        if (matriculasError) {
+            console.error('Erro ao buscar matrículas:', matriculasError);
+            throw matriculasError;
+        }
+
+        console.log('📋 Matrículas encontradas:', matriculas);
 
         if (!matriculas || matriculas.length === 0) {
-            alunoSelect.innerHTML = '<option value="">Nenhum aluno matriculado</option>';
+            alunoSelect.innerHTML = '<option value="">Nenhum aluno matriculado neste curso</option>';
             return;
         }
 
-        const options = matriculas.map(m => {
-            const nome = m.profiles?.full_name || m.profiles?.email || 'Sem nome';
-            return `<option value="${m.aluno_id}">${nome}</option>`;
+        // Buscar dados dos alunos em emails_autorizados
+        const alunosIds = matriculas.map(m => m.aluno_id).filter(Boolean);
+        const alunosEmails = matriculas.map(m => m.aluno_email).filter(Boolean);
+
+        console.log('👥 IDs dos alunos:', alunosIds);
+        console.log('📧 Emails dos alunos:', alunosEmails);
+
+        // Buscar alunos por ID ou email
+        let alunos = [];
+
+        if (alunosIds.length > 0) {
+            const { data: alunosPorId } = await supabaseClient
+                .from('emails_autorizados')
+                .select('*')
+                .in('id', alunosIds);
+
+            if (alunosPorId) alunos = [...alunos, ...alunosPorId];
+        }
+
+        if (alunosEmails.length > 0) {
+            const { data: alunosPorEmail } = await supabaseClient
+                .from('emails_autorizados')
+                .select('*')
+                .in('email', alunosEmails);
+
+            if (alunosPorEmail) alunos = [...alunos, ...alunosPorEmail];
+        }
+
+        console.log('✅ Alunos encontrados em emails_autorizados:', alunos);
+
+        // Criar mapa de alunos únicos
+        const alunosUnicos = new Map();
+        alunos.forEach(a => {
+            if (!alunosUnicos.has(a.id || a.email)) {
+                alunosUnicos.set(a.id || a.email, a);
+            }
+        });
+
+        // Criar options com dados dos alunos
+        const options = Array.from(alunosUnicos.values()).map(aluno => {
+            const nome = aluno.nome || aluno.email || 'Sem nome';
+            const identifier = aluno.id || aluno.email;
+            return `<option value="${identifier}">${nome} (${aluno.email})</option>`;
         }).join('');
 
-        alunoSelect.innerHTML = `<option value="">Selecione um aluno</option>${options}`;
+        if (options) {
+            alunoSelect.innerHTML = `<option value="">Selecione um aluno</option>${options}`;
+        } else {
+            alunoSelect.innerHTML = '<option value="">Nenhum aluno encontrado no sistema</option>';
+        }
 
     } catch (err) {
-        console.error('Erro ao carregar alunos:', err);
+        console.error('❌ Erro ao carregar alunos:', err);
         alunoSelect.innerHTML = '<option value="">Erro ao carregar alunos</option>';
     }
 }
